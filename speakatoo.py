@@ -8,6 +8,7 @@ load_dotenv()
 
 # Function to convert Thanglish content to audio using the Speakatoo API
 def convert_to_audio(thanglish_output):
+    print(thanglish_output)
     # Speakatoo API credentials and parameters
     username = "Navaneeth"  
     password = "Nava@8056" 
@@ -44,15 +45,26 @@ def convert_to_audio(thanglish_output):
     try:
         # Sending the POST request to Speakatoo API
         response = requests.post(url, headers=headers, json=payload)
+        data = response.json()['tts_uri']
 
         # Check if the response is successful
         if response.status_code == 200:
-            # Save the audio file (e.g., as an MP3 file)
-            with open("output_audio.mp3", "wb") as f:
-                f.write(response.content)
-            print("\nAudio conversion successful! Saved as output_audio.mp3.")
-        else:
-            print(f"Error: {response.status_code}, {response.text}")
+            # Step 3: Extract the audio URL
+            tts_uri = response.json().get('tts_uri')
+
+            if tts_uri:
+                # Step 4: Download the audio file from the URL
+                audio_response = requests.get(tts_uri)
+
+                if audio_response.status_code == 200:
+                    # Step 5: Save the audio content to a file
+                    with open("output_audio.mp3", "wb") as f:
+                        f.write(audio_response.content)
+                    print("Audio downloaded and saved as output_audio.mp3")
+                else:
+                    print(f"Failed to download audio. Status: {audio_response.status_code}")
+            else:
+                print("tts_uri not found in the response.")
 
     except Exception as e:
         print(f"Error occurred: {str(e)}")
